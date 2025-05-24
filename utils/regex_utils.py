@@ -292,7 +292,7 @@ def get_term_for_disorder(disorder_type: str):
         return None
 
 
-def get_disorder_for_term(term: str) -> str | None:
+def get_disorder_for_term(term: str):# -> str | None:
     """
     Given a term, return the disorder key whose list contains that term.
 

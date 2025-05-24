@@ -39,11 +39,13 @@ def load_raw_posts(filepath):
 def load_verified_users(filepath):
     """Load verified usernames from the CSV file."""
     verified_usernames = set()
-    if os.path.exists(filepath):
-        with open(filepath, newline='', encoding="utf-8") as f:
-            reader = csv.reader(f)
-            for row in reader:
-                verified_usernames.add(row[0])  # One-column file with usernames only
+    if not os.path.exists(filepath):
+        open(filepath, 'w', newline='', encoding="utf-8").close()  # Create the file if it doesn't exist
+
+    with open(filepath, newline='', encoding="utf-8") as f:
+        reader = csv.reader(f)
+        for row in reader:
+            verified_usernames.add(row[0])  # One-column file with usernames only
     return verified_usernames
 
 

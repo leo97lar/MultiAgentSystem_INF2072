@@ -1,7 +1,7 @@
 langchain
 langchain-ollama
 praw
-os
-re
-datetime
 pandas
+transformers
+torch
+emoji
