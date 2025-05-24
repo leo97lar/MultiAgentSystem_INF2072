@@ -7,6 +7,7 @@ from fetch_data_user import fetch_user_data_for_specific_disorder, fetch_user_da
 from utils.regex_utils import get_disorder_for_term
 from agents.agent2_englishchecker import is_english
 from utils.path_utils import RAW_PATH, OUTPUT_FILE, VERIFIED_USERS_FILE, USER_RECHECK_FILE, USER_RECHECK_OTHER_DISORDERS
+from tqdm import tqdm
 
 
 def find_latest_raw_file(directory=RAW_PATH):
@@ -85,7 +86,7 @@ def run_agent_verify_disorder(disorder: str):
         if not output_file_exists:
             writer.writeheader()
 
-        for post in raw_posts:
+        for post in tqdm(raw_posts, desc=f"Processing posts"):
             text_declared = post.get("text_declared", "").lower()
             # print(text_declared)
             flair_declared = post.get("flair_declared", "").lower()
@@ -112,7 +113,7 @@ def run_agent_verify_disorder(disorder: str):
     # This is important because textual explicit self-declaration are stronger than flairs
 
     if users_to_recheck:
-        print(f"Fetching posts for {len(users_to_recheck)} flair-only users")
+        # print(f"Fetching posts for {len(users_to_recheck)} flair-only users")
         fetch_user_data_for_specific_disorder(list(users_to_recheck), post_limit=None, disorder=disorder)
 
         # Ensure the correct file is referenced
@@ -123,11 +124,12 @@ def run_agent_verify_disorder(disorder: str):
 
                 with open(raw_recheck_file, newline='', encoding="utf-8") as f_recheck:
                     recheck_posts = list(csv.DictReader(f_recheck))
-                    for post in recheck_posts:
+                    for post in tqdm(recheck_posts, desc="Checking flair-only users"):
                         username = post.get("username")
                         if username in verified_usernames:
                             continue
 
+                        # Check if the user has no post/comments verified, only flair
                         text_declared = post.get("text_declared", "").lower()
                         if text_declared != 'true':
                             continue
@@ -170,6 +172,7 @@ def run_agent_verify_other_disorders(users_to_recheck, verified_usernames, disor
         "flair_declared", "text_declared", "any_declared", "is_english", "llm_verified", "pattern_found"
     ]
 
+    print(f"Agent 3: Starting verification other disorders")
     if os.path.exists(VERIFIED_USERS_FILE) and users_to_recheck:
         print(f"Fetching posts for {len(users_to_recheck)} flair-only users for disorders other than {disorder}")
         fetch_user_data_for_other_disorders(list(users_to_recheck), post_limit=None, disorder=disorder)
@@ -181,7 +184,7 @@ def run_agent_verify_other_disorders(users_to_recheck, verified_usernames, disor
 
                 with open(raw_recheck_file, newline='', encoding="utf-8") as f_recheck:
                     recheck_posts = list(csv.DictReader(f_recheck))
-                    for post in recheck_posts:
+                    for post in tqdm(recheck_posts, desc="Agent 3"):
                         username = post.get("username")
                         if username in verified_usernames:
                             continue
@@ -211,4 +214,4 @@ def run_agent_verify_other_disorders(users_to_recheck, verified_usernames, disor
                         else:
                             post["is_english"] = False
 
-        print(f"Agent 1: Finished verifying self-declarations for disorders other than {disorder}. Verified posts saved to {OUTPUT_FILE}")
+        print(f"Agent 3: Finished verifying self-declarations for disorders other than {disorder}. Verified posts saved to {OUTPUT_FILE}")

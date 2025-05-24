@@ -6,6 +6,7 @@ from utils.reddit_utils import get_reddit_instance
 import os
 from utils.regex_utils import find_declaration_patterns
 import utils.regex_utils
+from  tqdm import tqdm
 
 # Regular expressions for self-declarations, update as needed
 
@@ -42,12 +43,16 @@ def fetch_subreddit_data(subreddit_name: str,
     total_submissions = 0
     total_comments = 0
 
+    progress_bar = tqdm(total=submission_goal + comment_goal, desc="Fetching data")
+
     for submission in subreddit.new(limit=None):
         if submissions_found >= submission_goal and comments_found >= comment_goal:
             break
 
+        progress_bar.n = min(submission_goal, submissions_found) + min(comment_goal, comments_found)
+
         total_submissions += 1
-        print(f'Submissions checked in total: {total_submissions}')
+        # print(f'Submissions checked in total: {total_submissions}')
         submission.comments.replace_more(limit=0)
 
         user_flair = submission.author_flair_text if submission.author_flair_text else ""
@@ -59,8 +64,8 @@ def fetch_subreddit_data(subreddit_name: str,
 
         if any_declared and submissions_found < submission_goal:
             submissions_found += 1
-            if submissions_found > 0:
-                print(f'FOUND {submissions_found} SUBMISSIONS')
+            # if submissions_found > 0:
+            #     print(f'FOUND {submissions_found} SUBMISSIONS')
             data.append({
                 "type": "submission",
                 "id": submission.id,
@@ -80,9 +85,9 @@ def fetch_subreddit_data(subreddit_name: str,
             })
 
         for comment in submission.comments:
-            print('Checking commments now.')
+            # print('Checking commments now.')
             total_comments += 1
-            print(f'Comments checked in total: {total_comments}')
+            # print(f'Comments checked in total: {total_comments}')
             if comments_found >= comment_goal:
                 break
 
@@ -99,8 +104,8 @@ def fetch_subreddit_data(subreddit_name: str,
 
             if any_declared_c and comments_found < comment_goal:
                 comments_found += 1
-                if comments_found > 0:
-                    print(f'FOUND {comments_found} COMMENTS')
+                # if comments_found > 0:
+                #     print(f'FOUND {comments_found} COMMENTS')
                 data.append({
                     "type": "comment",
                     "id": comment.id,
@@ -140,7 +145,8 @@ def fetch_subreddit_data(subreddit_name: str,
     # Save to uniquely named file
     df.to_csv(output_path, index=False)
 
-    print(f"Finished fetching from subreddits.")
+    # print(f"Finished fetching from subreddits.")
+    print()
     print(f"Fetched {total_submissions} submissions and {total_comments} comments in total.")
     print(f"Kept {submissions_found} submissions and {comments_found} comments with self-identifications.")
-    print(f"Saved to {output_path}")
+    # print(f"Saved to {output_path}")

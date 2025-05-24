@@ -9,13 +9,13 @@ import fetch_data_subreddit
 import utils.regex_utils
 from utils.regex_utils import find_all_but_one_patterns, get_flair_pattern_for_disorder
 from utils.path_utils import RAW_PATH, OUTPUT_FILE, VERIFIED_USERS_FILE, USER_RECHECK_FILE, USER_RECHECK_OTHER_DISORDERS
-
+from tqdm import tqdm
 
 def fetch_user_data_for_specific_disorder(usernames, post_limit=None, delay=1.0, disorder=''):
     """
     Fetch submissions and comments for given usernames.
     Identify potential schizophrenia self-declarations via regex.
-    Save results to 'data/raw/user_recheck.csv'.
+    Save results to 'data/raw/verified_users_step1_posts.csv'.
 
     Parameters:
         usernames (list): List of Reddit usernames.
@@ -28,11 +28,11 @@ def fetch_user_data_for_specific_disorder(usernames, post_limit=None, delay=1.0,
 
     for username in usernames:
         try:
-            print(f"🔍 Fetching history for u/{username}")
+            # print(f"🔍 Fetching history for u/{username}")
             user = reddit.redditor(username)
 
             # === Fetch submissions ===
-            for submission in user.submissions.new(limit=post_limit):
+            for submission in tqdm(user.submissions.new(limit=post_limit), desc=f"🔍 Posts from u/{username}"):
                 user_flair = submission.author_flair_text if submission.author_flair_text else ""
                 author_name = submission.author.name if submission.author else "deleted"
                 pattern_flair = get_flair_pattern_for_disorder(disorder)
@@ -59,7 +59,7 @@ def fetch_user_data_for_specific_disorder(usernames, post_limit=None, delay=1.0,
                 })
 
             # === Fetch comments ===
-            for comment in user.comments.new(limit=post_limit):
+            for comment in tqdm(user.comments.new(limit=post_limit), desc=f"🔍 Comments from u/{username}"):
                 comment_flair = comment.author_flair_text or ""
                 pattern_flair = get_flair_pattern_for_disorder(disorder)
                 flair_declared_c = bool(pattern_flair.search(comment_flair))
@@ -107,7 +107,7 @@ def fetch_user_data_for_other_disorders(usernames, post_limit=None, delay=1.0, d
     """
         Fetch submissions and comments for given usernames.
         Identify self-declarations for all disorders except the specified one.
-        Save results to 'data/raw/user_recheck.csv'.
+        Save results to 'data/raw/verified_users_step1_posts.csv'.
 
         Parameters:
             usernames (list): List of Reddit usernames.
