@@ -36,7 +36,7 @@ def fetch_user_data_for_specific_disorder(usernames, post_limit=None, delay=1.0,
                 user_flair = submission.author_flair_text if submission.author_flair_text else ""
                 author_name = submission.author.name if submission.author else "deleted"
                 pattern_flair = get_flair_pattern_for_disorder(disorder)
-                flair_declared = bool(pattern_flair.search(comment_flair))
+                flair_declared = bool(pattern_flair.search(user_flair))
                 submission_declared = fetch_data_subreddit.match_self_declaration(submission.selftext + " " + submission.title, disorder)
                 any_declared = flair_declared or submission_declared
                 post_text = f"{submission.title}\n{submission.selftext or ''}"
